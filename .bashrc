@@ -17,4 +17,20 @@ fi
 
 # Put your fun stuff here.
 
+friday() {
+  write-hours "last Friday" "$1" && hours
+}
+
+hours() (
+  cd ~/kb && GIT_DIR=hours.git gitk
+)
+
+today() {
+  write-hours today "$1" && hours
+}
+
+yesterday() {
+  write-hours yesterday "$1" && hours
+}
+
 PATH+=:~/bin

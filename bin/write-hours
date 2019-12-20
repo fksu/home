@@ -1,0 +1,23 @@
+#!/bin/bash -e
+
+set -e
+date=`date --date "$1" +%F`
+hours=${2//[^0-9.]}
+
+declare -i week=`date --date "$date" +%y%V`
+declare -i prev=`date --date "$date"-week +%y%V`
+declare -i next=`date --date "$date"+week +%y%V`
+[[ "$prev" > "$week" ]] && ((week+=100)) #handle the last week of a year
+[[ "$next" < "$week" ]] && ((week-=100)) #handle the first week of a year
+
+file=~/kb/hours"${week:0:2}".csv
+export GIT_DIR=hours.git
+
+tmp=
+trap '[ -f "$tmp" ] && rm -- "$tmp"' EXIT
+tmp=`mktemp`
+
+awk -F\; "BEGIN{OFS=FS} \$1==$week{\$3+=$hours} {print}" <"$file" >"$tmp"
+mv -- "$tmp" "$file"
+cd -- "${file%/*}"
+git commit -am "$date"

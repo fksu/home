@@ -1,0 +1,23 @@
+#!/bin/bash
+
+dir=~/data/builds
+rsync=buildserver::builds/nSDK-Arcam-yocto
+declare -i build=${1//[^0-9]} last=`<"$dir"/last`
+mkdir -p "$dir"
+
+grep-rootfs() {
+  find "$dir" -type f -name swuversions.txt -exec fgrep rootfs: {} \;
+}
+
+last() {
+  grep-rootfs | egrep -io '\.[0-9]+\.0x' | cut -c2- \
+    | sed 's/\.0x.*//' | sort -nu | tail -n1
+}
+
+if ((build > last)); then
+  rsync -am -f '+ */' -f '-! swuversions.txt' "$rsync" "$dir"
+  last >"$dir"/last
+fi
+
+c=$((${#build}+5))
+grep-rootfs | egrep -io "\.$build\.0x[0-9a-f]+" | cut -c$c- | sort -u
